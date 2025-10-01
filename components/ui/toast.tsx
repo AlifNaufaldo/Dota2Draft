@@ -25,7 +25,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const addToast = useCallback((toast: Omit<Toast, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
     const newToast = { ...toast, id };
-    
+
     setToasts((prev) => [...prev, newToast]);
 
     // Auto remove after duration (default 4 seconds)
@@ -94,10 +94,14 @@ function ToastItem({ toast }: { toast: Toast }) {
 
   return (
     <div
-      className={`${colorMap[toast.type]} p-4 rounded-lg border backdrop-blur-sm shadow-lg transform transition-all duration-300 animate-in slide-in-from-right-5`}
+      className={`${
+        colorMap[toast.type]
+      } p-4 rounded-lg border backdrop-blur-sm shadow-lg transform transition-all duration-300 animate-in slide-in-from-right-5`}
     >
       <div className="flex items-start gap-3">
-        <Icon className={`h-5 w-5 ${iconColorMap[toast.type]} flex-shrink-0 mt-0.5`} />
+        <Icon
+          className={`h-5 w-5 ${iconColorMap[toast.type]} flex-shrink-0 mt-0.5`}
+        />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{toast.title}</p>
           {toast.description && (

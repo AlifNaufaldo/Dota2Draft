@@ -125,7 +125,7 @@
   .animate-spinner {
     animation: spinner 1s linear infinite;
   }
-  
+
   @keyframes spinner {
     from {
       transform: rotate(0deg);

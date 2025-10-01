@@ -82,7 +82,9 @@ export function HeroGrid({
           ) : (
             <Filter className="h-5 w-5 text-blue-400" />
           )}
-          {isLoading ? "Loading Heroes..." : `Hero Selection (${filteredHeroes.length})`}
+          {isLoading
+            ? "Loading Heroes..."
+            : `Hero Selection (${filteredHeroes.length})`}
         </CardTitle>
 
         {/* Search */}
@@ -187,12 +189,17 @@ export function HeroGrid({
             <div className="text-center py-6">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-400/30 border-t-cyan-400 mx-auto mb-4"></div>
               <p className="text-slate-300 font-medium">Loading Heroes...</p>
-              <p className="text-slate-400 text-sm">Fetching Dota 2 hero data</p>
+              <p className="text-slate-400 text-sm">
+                Fetching Dota 2 hero data
+              </p>
             </div>
             {/* Loading skeleton */}
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 max-h-96 overflow-y-auto">
               {Array.from({ length: 48 }).map((_, i) => (
-                <div key={i} className="bg-slate-800/60 rounded-lg p-2 animate-pulse border border-slate-700/50">
+                <div
+                  key={i}
+                  className="bg-slate-800/60 rounded-lg p-2 animate-pulse border border-slate-700/50"
+                >
                   <div className="aspect-square bg-slate-700/60 rounded mb-1"></div>
                   <div className="h-2 bg-slate-700/60 rounded mb-1"></div>
                   <div className="h-2 bg-slate-700/40 rounded w-2/3"></div>
@@ -215,7 +222,9 @@ export function HeroGrid({
 
             {filteredHeroes.length === 0 && (
               <div className="text-center py-8 text-gray-400">
-                <p className="text-white">No heroes found matching your filters</p>
+                <p className="text-white">
+                  No heroes found matching your filters
+                </p>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -245,31 +254,34 @@ function HeroCard({ hero, onSelect, isPicked }: HeroCardProps) {
       border: "border-red-500/70",
       bg: "from-red-950/40 to-red-900/30",
       hover: "hover:border-red-400 hover:shadow-red-500/20",
-      icon: "text-red-400"
+      icon: "text-red-400",
     },
     agi: {
       border: "border-green-500/70",
       bg: "from-green-950/40 to-green-900/30",
       hover: "hover:border-green-400 hover:shadow-green-500/20",
-      icon: "text-green-400"
+      icon: "text-green-400",
     },
     int: {
       border: "border-blue-500/70",
       bg: "from-blue-950/40 to-blue-900/30",
       hover: "hover:border-blue-400 hover:shadow-blue-500/20",
-      icon: "text-blue-400"
+      icon: "text-blue-400",
     },
     // Fallback for unknown attributes
     default: {
       border: "border-slate-500/70",
       bg: "from-slate-950/40 to-slate-900/30",
       hover: "hover:border-slate-400 hover:shadow-slate-500/20",
-      icon: "text-slate-400"
-    }
+      icon: "text-slate-400",
+    },
   };
 
   // Safely get colors with fallback
-  const colors = attributeColors[(hero.primary_attr || 'str') as keyof typeof attributeColors] || attributeColors.default;
+  const colors =
+    attributeColors[
+      (hero.primary_attr || "str") as keyof typeof attributeColors
+    ] || attributeColors.default;
   const mainRole = hero.roles?.[0] || "Unknown";
   const attackType = hero.attack_type || "Unknown";
 
@@ -284,41 +296,56 @@ function HeroCard({ hero, onSelect, isPicked }: HeroCardProps) {
         }
       `}
       onClick={!isPicked ? onSelect : undefined}
-      title={`${hero.localized_name || 'Unknown Hero'} - ${mainRole} (${attackType})`}
+      title={`${
+        hero.localized_name || "Unknown Hero"
+      } - ${mainRole} (${attackType})`}
     >
-      <Card className={`
+      <Card
+        className={`
         border overflow-hidden bg-gradient-to-br from-slate-900/60 to-slate-800/40
         ${
-          isPicked 
-            ? "border-slate-600/40" 
+          isPicked
+            ? "border-slate-600/40"
             : `${colors.border} ${colors.bg} ${colors.hover} hover:shadow-md`
         }
-      `}>
+      `}
+      >
         <CardContent className="p-1.5">
           {/* Hero Portrait */}
           <div className="relative aspect-square mb-1.5">
             <Avatar className="w-full h-full rounded-md">
               <AvatarImage
                 src={getHeroImageUrl(hero.name, "icon")}
-                alt={hero.localized_name || 'Unknown Hero'}
+                alt={hero.localized_name || "Unknown Hero"}
                 className="object-cover transition-transform group-hover:scale-110"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  const heroName = (hero.name || '').replace("npc_dota_hero_", "") || 'unknown';
+                  const heroName =
+                    (hero.name || "").replace("npc_dota_hero_", "") ||
+                    "unknown";
                   target.src = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/heroes/${heroName}_icon.png`;
                 }}
               />
               <AvatarFallback className="bg-gradient-to-br from-slate-700 to-slate-800 text-slate-200 text-[10px] font-bold">
-                {(hero.localized_name || 'UH').slice(0, 2).toUpperCase()}
+                {(hero.localized_name || "UH").slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            
+
             {/* Attribute indicator */}
-            <div className={`absolute top-0.5 right-0.5 w-2 h-2 rounded-full ${colors.icon.replace('text-', 'bg-')} shadow-sm`}></div>
-            
+            <div
+              className={`absolute top-0.5 right-0.5 w-2 h-2 rounded-full ${colors.icon.replace(
+                "text-",
+                "bg-"
+              )} shadow-sm`}
+            ></div>
+
             {/* Attack type indicator */}
             <div className="absolute bottom-0.5 left-0.5">
-              <div className={`w-1.5 h-1.5 ${attackType === 'Melee' ? 'bg-orange-400' : 'bg-cyan-400'} rounded-sm shadow-sm`}></div>
+              <div
+                className={`w-1.5 h-1.5 ${
+                  attackType === "Melee" ? "bg-orange-400" : "bg-cyan-400"
+                } rounded-sm shadow-sm`}
+              ></div>
             </div>
 
             {/* Picked overlay */}
@@ -335,16 +362,18 @@ function HeroCard({ hero, onSelect, isPicked }: HeroCardProps) {
           <div className="space-y-0.5">
             {/* Name */}
             <h4 className="text-[10px] font-semibold text-white truncate leading-tight">
-              {hero.localized_name || 'Unknown Hero'}
+              {hero.localized_name || "Unknown Hero"}
             </h4>
-            
+
             {/* Main role and attribute */}
             <div className="flex items-center justify-between">
-              <span className={`text-[8px] font-medium ${colors.icon} truncate flex-1`}>
+              <span
+                className={`text-[8px] font-medium ${colors.icon} truncate flex-1`}
+              >
                 {mainRole.slice(0, 6)}
               </span>
               <span className="text-[8px] font-bold text-slate-300">
-                {(hero.primary_attr || 'str').toUpperCase()}
+                {(hero.primary_attr || "str").toUpperCase()}
               </span>
             </div>
           </div>

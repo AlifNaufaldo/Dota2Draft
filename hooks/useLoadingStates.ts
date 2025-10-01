@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface LoadingState {
   isLoadingHeroes: boolean;
@@ -15,16 +15,19 @@ export const useLoadingStates = (): LoadingState => {
   const [isLoadingHeroes, setIsLoadingHeroes] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
-  const [loadingMessage, setLoadingMessageState] = useState('');
+  const [loadingMessage, setLoadingMessageState] = useState("");
 
   const setHeroesLoading = useCallback((loading: boolean) => {
     setIsLoadingHeroes(loading);
   }, []);
 
-  const setSuggestionsLoading = useCallback((loading: boolean, message?: string) => {
-    setIsLoadingSuggestions(loading);
-    setLoadingMessageState(message || (loading ? 'Analyzing draft...' : ''));
-  }, []);
+  const setSuggestionsLoading = useCallback(
+    (loading: boolean, message?: string) => {
+      setIsLoadingSuggestions(loading);
+      setLoadingMessageState(message || (loading ? "Analyzing draft..." : ""));
+    },
+    []
+  );
 
   const setStatsLoading = useCallback((loading: boolean) => {
     setIsLoadingStats(loading);

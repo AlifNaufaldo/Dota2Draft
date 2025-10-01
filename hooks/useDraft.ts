@@ -46,13 +46,13 @@ export const useDraft = () => {
   });
 
   const [roleFilter, setRoleFilter] = useState<Role[]>([]);
-  
+
   // Loading notification state
   const [loadingNotification, setLoadingNotification] = useState<{
     isVisible: boolean;
     message: string;
-    type: 'loading' | 'success' | 'error';
-  }>({ isVisible: false, message: '', type: 'loading' });
+    type: "loading" | "success" | "error";
+  }>({ isVisible: false, message: "", type: "loading" });
 
   // Queries
   const {
@@ -88,8 +88,8 @@ export const useDraft = () => {
       // Show loading notification
       setLoadingNotification({
         isVisible: true,
-        message: 'Analyzing draft composition...',
-        type: 'loading'
+        message: "Analyzing draft composition...",
+        type: "loading",
       });
     },
     onSuccess: (data) => {
@@ -99,23 +99,23 @@ export const useDraft = () => {
       setLoadingNotification({
         isVisible: true,
         message: `Found ${data.length} AI suggestions!`,
-        type: 'success'
+        type: "success",
       });
       // Hide notification after delay
       setTimeout(() => {
-        setLoadingNotification(prev => ({ ...prev, isVisible: false }));
+        setLoadingNotification((prev) => ({ ...prev, isVisible: false }));
       }, 2000);
     },
     onError: (error) => {
-      console.error('Failed to fetch suggestions:', error);
+      console.error("Failed to fetch suggestions:", error);
       setLoadingNotification({
         isVisible: true,
-        message: 'Failed to analyze draft. Please try again.',
-        type: 'error'
+        message: "Failed to analyze draft. Please try again.",
+        type: "error",
       });
       // Hide error notification after delay
       setTimeout(() => {
-        setLoadingNotification(prev => ({ ...prev, isVisible: false }));
+        setLoadingNotification((prev) => ({ ...prev, isVisible: false }));
       }, 3000);
     },
   });

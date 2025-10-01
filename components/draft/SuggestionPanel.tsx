@@ -151,8 +151,12 @@ export function SuggestionPanel({
               <Brain className="h-16 w-16 mx-auto text-emerald-400 animate-pulse" />
               <div className="absolute inset-0 h-16 w-16 mx-auto border-4 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin"></div>
             </div>
-            <p className="text-slate-300 font-medium">Analyzing draft composition...</p>
-            <p className="text-slate-400 text-sm">Finding the best hero counters</p>
+            <p className="text-slate-300 font-medium">
+              Analyzing draft composition...
+            </p>
+            <p className="text-slate-400 text-sm">
+              Finding the best hero counters
+            </p>
           </div>
         )}
 
@@ -179,7 +183,12 @@ export function SuggestionPanel({
               key={suggestion.hero.id}
               suggestion={suggestion}
               rank={index + 1}
-              onSelect={() => handleHeroSelect(suggestion.hero.id, suggestion.hero.localized_name)}
+              onSelect={() =>
+                handleHeroSelect(
+                  suggestion.hero.id,
+                  suggestion.hero.localized_name
+                )
+              }
             />
           ))}
         </div>
@@ -194,7 +203,11 @@ interface SuggestionGalleryCardProps {
   onSelect: () => void;
 }
 
-function SuggestionGalleryCard({ suggestion, rank, onSelect }: SuggestionGalleryCardProps) {
+function SuggestionGalleryCard({
+  suggestion,
+  rank,
+  onSelect,
+}: SuggestionGalleryCardProps) {
   const { hero, score, win_rate, confidence } = suggestion;
 
   const confidenceColor = {
@@ -217,15 +230,19 @@ function SuggestionGalleryCard({ suggestion, rank, onSelect }: SuggestionGallery
     >
       {/* Rank Badge */}
       <div className="absolute top-2 left-2 z-10">
-        <Badge className={`${rankBadgeColor} text-xs px-2 py-1`}>
-          #{rank}
-        </Badge>
+        <Badge className={`${rankBadgeColor} text-xs px-2 py-1`}>#{rank}</Badge>
       </div>
 
       {/* Confidence Badge */}
       <div className="absolute top-2 right-2 z-10">
-        <Badge className={`${confidenceColor} bg-slate-900/80 text-xs px-2 py-1 border`}>
-          {confidence === 'high' ? '★★★' : confidence === 'medium' ? '★★☆' : '★☆☆'}
+        <Badge
+          className={`${confidenceColor} bg-slate-900/80 text-xs px-2 py-1 border`}
+        >
+          {confidence === "high"
+            ? "★★★"
+            : confidence === "medium"
+            ? "★★☆"
+            : "★☆☆"}
         </Badge>
       </div>
 
@@ -253,15 +270,13 @@ function SuggestionGalleryCard({ suggestion, rank, onSelect }: SuggestionGallery
           <h3 className="font-bold text-white text-sm truncate mb-1">
             {hero.localized_name}
           </h3>
-          
+
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-emerald-400" />
               <span className="text-emerald-300 font-semibold">{score}</span>
             </div>
-            <span className="text-slate-300">
-              {win_rate.toFixed(1)}% WR
-            </span>
+            <span className="text-slate-300">{win_rate.toFixed(1)}% WR</span>
           </div>
 
           {/* Primary Role */}
