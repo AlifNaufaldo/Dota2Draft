@@ -1,36 +1,168 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dota 2 Draft Analyzer
 
-## Getting Started
+AI-powered Dota 2 hero draft suggestions and counter-picking tool built with Next.js 15, TanStack Query, and Shadcn UI.
 
-First, run the development server:
+## 🚀 Features
+
+- **Real-time Draft Analysis**: Get AI-powered hero suggestions based on enemy picks
+- **Counter-pick Intelligence**: Advanced matchup analysis using OpenDota API data
+- **Role-based Filtering**: Filter suggestions by hero roles (Carry, Support, etc.)
+- **Meta-aware Suggestions**: Incorporates current patch win rates and pick rates
+- **Intuitive UI**: Modern, responsive interface built with Shadcn UI
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + Shadcn UI
+- **State Management**: TanStack Query
+- **Data Source**: OpenDota API
+- **Icons**: Lucide React
+
+## 📦 Installation
 
 ```bash
+# Clone the repository
+git clone <your-repo-url>
+cd my-app
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔧 Environment Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# OpenDota API Configuration
+OPENDOTA_API_BASE=https://api.opendota.com/api
+OPENDOTA_RATE_LIMIT=60
+OPENDOTA_TIMEOUT=10000
 
-## Learn More
+# Cache Configuration
+CACHE_TTL_HEROES=3600000
+CACHE_TTL_STATS=1800000
+CACHE_TTL_SUGGESTIONS=300000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🏗️ Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   │   ├── heroes/        # Heroes endpoint
+│   │   ├── hero-stats/    # Hero statistics
+│   │   └── suggestions/   # Draft suggestions
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx          # Home page
+├── components/            # React components
+│   ├── draft/            # Draft-specific components
+│   │   ├── DraftBoard.tsx    # Main draft interface
+│   │   ├── HeroGrid.tsx      # Hero selection grid
+│   │   ├── SuggestionPanel.tsx # AI suggestions
+│   │   └── TeamDraft.tsx     # Team composition
+│   ├── ui/               # Shadcn UI components
+│   └── providers.tsx     # React Query provider
+├── hooks/                # Custom React hooks
+│   └── useDraft.ts       # Draft state management
+├── lib/                  # Utility libraries
+│   ├── types.ts          # TypeScript interfaces
+│   ├── opendota.ts       # OpenDota API client
+│   ├── draft-logic.ts    # Draft analysis algorithm
+│   ├── data-transformer.ts # Data transformation utilities
+│   ├── cache.ts          # Caching system
+│   ├── validation.ts     # Input validation
+│   └── error-handling.ts # Error handling utilities
+└── public/               # Static assets
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎯 How It Works
 
-## Deploy on Vercel
+1. **Enemy Team Input**: Select enemy heroes from the hero grid
+2. **AI Analysis**: Algorithm analyzes matchups, meta trends, and team synergy
+3. **Smart Suggestions**: Get ranked hero recommendations with reasoning
+4. **Team Building**: Build your team composition with guided suggestions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📊 Algorithm Details
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The suggestion system uses a weighted scoring model:
+
+- **Counter Score (40%)**: Win rate vs enemy heroes
+- **Team Synergy (30%)**: Compatibility with your picks
+- **Meta Score (20%)**: Current patch performance
+- **Pro Scene (10%)**: Professional match popularity
+
+## 🚧 Development Status
+
+### ✅ Completed
+
+- Core draft analysis engine
+- Hero selection interface
+- Suggestion panel with filtering
+- API integration with OpenDota
+- Responsive UI design
+
+### 🔄 In Progress
+
+- Error boundaries and improved error handling
+- Comprehensive input validation
+- Performance optimizations
+- Caching layer improvements
+
+### 📋 Planned
+
+- Unit and integration tests
+- Historical draft analysis
+- Pro scene integration
+- Accessibility improvements
+- Performance monitoring
+
+## 🧪 Testing
+
+```bash
+# Run tests (when implemented)
+npm test
+
+# Run linting
+npm run lint
+
+# Type checking
+npm run type-check
+```
+
+## 📈 Performance Considerations
+
+- API response caching with TTL
+- Component memoization for expensive renders
+- Lazy loading for hero images
+- Request debouncing for search
+
+## 🔒 Security
+
+- Input validation and sanitization
+- Rate limiting protection
+- Error message sanitization
+- Type-safe API contracts
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- [OpenDota](https://www.opendota.com/) for providing free Dota 2 API
+- [Shadcn/ui](https://ui.shadcn.com/) for the component library
+- [Valve](https://www.valvesoftware.com/) for Dota 2
