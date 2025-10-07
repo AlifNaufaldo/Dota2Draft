@@ -265,7 +265,7 @@ function SuggestionGalleryCard({
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
         </div>
 
-        {/* Hero Info */}
+        {/* Simplified Hero Info */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900/95 to-transparent">
           <h3 className="font-bold text-white text-sm truncate mb-1">
             {hero.localized_name}
@@ -274,12 +274,12 @@ function SuggestionGalleryCard({
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-emerald-400" />
-              <span className="text-emerald-300 font-semibold">{score}</span>
+              <span className="text-emerald-300 font-semibold text-sm">{score.toFixed(2)}</span>
             </div>
-            <span className="text-slate-300">{win_rate.toFixed(1)}% WR</span>
+            <span className="text-slate-300">{Number(win_rate).toFixed(2)}% WR</span>
           </div>
 
-          {/* Primary Role */}
+          {/* Simple Role Badge */}
           <div className="mt-1">
             <Badge className="text-xs px-1.5 py-0.5 bg-slate-700/80 text-slate-300 border-slate-600/50">
               {hero.roles[0]}

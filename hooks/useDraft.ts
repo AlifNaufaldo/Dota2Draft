@@ -124,8 +124,7 @@ export const useDraft = () => {
       });
     },
     onSuccess: (data) => {
-      // Cache the suggestions
-      queryClient.setQueryData(["suggestions", draftState, roleFilter], data);
+      // Don't cache suggestions since they depend on dynamic draft state
       // Show success notification
       setLoadingNotification({
         isVisible: true,
@@ -172,8 +171,11 @@ export const useDraft = () => {
 
         return newState;
       });
+
+      // Reset mutation data to ensure fresh suggestions
+      suggestionsMutation.reset();
     },
-    []
+    [suggestionsMutation]
   );
 
   const removeHeroFromTeam = useCallback(
@@ -193,8 +195,11 @@ export const useDraft = () => {
 
         return newState;
       });
+
+      // Reset mutation data to ensure fresh suggestions
+      suggestionsMutation.reset();
     },
-    []
+    [suggestionsMutation]
   );
 
   const resetDraft = useCallback(() => {

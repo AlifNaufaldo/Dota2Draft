@@ -373,7 +373,7 @@ export function DraftBoard() {
                           {suggestion.hero.localized_name}
                         </span>
                         <Badge className="bg-slate-700/60 border-slate-600/60 text-slate-300 text-xs ml-auto px-2">
-                          {suggestion.win_rate.toFixed(1)}%
+                          {suggestion.win_rate.toFixed(2)}%
                         </Badge>
                       </div>
                     ))}

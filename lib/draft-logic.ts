@@ -129,7 +129,9 @@ export class DraftAnalyzer {
           return {
             hero: suggestion.hero,
             score: suggestion.score,
-            win_rate: heroStats?.pub_win || 0.5,
+            win_rate: heroStats 
+              ? calculateWinRate(heroStats.pub_win, heroStats.pub_pick)
+              : 50,
             confidence:
               suggestion.score > 0.8
                 ? "high"
@@ -765,9 +767,12 @@ export class DraftAnalyzer {
     return suggestions.map((suggestion) => ({
       hero: suggestion.hero,
       score: suggestion.score,
-      win_rate:
-        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
-        0.5,
+      win_rate: this.heroStats.find((hs) => hs.id === suggestion.hero.id)
+        ? calculateWinRate(
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_win,
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_pick
+          )
+        : 50,
       confidence:
         suggestion.score > 0.8
           ? "high"
@@ -810,9 +815,12 @@ export class DraftAnalyzer {
     return suggestions.map((suggestion) => ({
       hero: suggestion.hero,
       score: suggestion.score,
-      win_rate:
-        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
-        0.5,
+      win_rate: this.heroStats.find((hs) => hs.id === suggestion.hero.id)
+        ? calculateWinRate(
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_win,
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_pick
+          )
+        : 50,
       confidence:
         suggestion.score > 0.8
           ? "high"
@@ -857,9 +865,12 @@ export class DraftAnalyzer {
     return suggestions.map((suggestion) => ({
       hero: suggestion.hero,
       score: suggestion.score,
-      win_rate:
-        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
-        0.5,
+      win_rate: this.heroStats.find((hs) => hs.id === suggestion.hero.id)
+        ? calculateWinRate(
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_win,
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_pick
+          )
+        : 50,
       confidence:
         suggestion.score > 0.8
           ? "high"
@@ -904,9 +915,12 @@ export class DraftAnalyzer {
     return suggestions.map((suggestion) => ({
       hero: suggestion.hero,
       score: suggestion.score,
-      win_rate:
-        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
-        0.5,
+      win_rate: this.heroStats.find((hs) => hs.id === suggestion.hero.id)
+        ? calculateWinRate(
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_win,
+            this.heroStats.find((hs) => hs.id === suggestion.hero.id)!.pub_pick
+          )
+        : 50,
       confidence:
         suggestion.score > 0.8
           ? "high"

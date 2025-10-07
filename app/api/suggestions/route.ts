@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Debug: Log current draft state
+    const yourTeamCount = draftState.yourTeam.filter((h) => h !== null).length;
+    const enemyTeamCount = draftState.enemyTeam.filter(
+      (h) => h !== null
+    ).length;
+    console.log(
+      `🎯 API Request - Your team: ${yourTeamCount}, Enemy team: ${enemyTeamCount}`
+    );
+
     // Fetch heroes and stats
     const [heroes, heroStats] = await Promise.all([
       OpenDotaAPI.getHeroes(),
