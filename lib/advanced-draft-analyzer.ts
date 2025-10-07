@@ -461,7 +461,9 @@ export class AdvancedDraftAnalyzer {
       (hero) =>
         !draftState.yourTeam.some((h: Hero | null) => h?.id === hero.id) &&
         !draftState.enemyTeam.some((h: Hero | null) => h?.id === hero.id) &&
-        (!roleFilter || roleFilter.length === 0 || this.matchesRoleFilter(hero, roleFilter))
+        (!roleFilter ||
+          roleFilter.length === 0 ||
+          this.matchesRoleFilter(hero, roleFilter))
     );
 
     const suggestions: AdvancedSuggestion[] = availableHeroes.map((hero) => {

@@ -127,15 +127,18 @@ export class DraftAnalyzerIntegration {
       .filter((suggestion) => {
         // Check if this hero is a good counter to the target enemy
         const isGoodCounter = suggestion.breakdown.counter > 0.6;
-        const hasCounterReason = suggestion.reasons.some(reason => 
-          reason.toLowerCase().includes('counter'));
-        
+        const hasCounterReason = suggestion.reasons.some((reason) =>
+          reason.toLowerCase().includes("counter")
+        );
+
         // Consider the target enemy hero for better counter recommendations
         const targetEnemyName = targetEnemyHero.localized_name.toLowerCase();
-        const mentionsTarget = suggestion.reasons.some(reason =>
-          reason.toLowerCase().includes(targetEnemyName) ||
-          reason.toLowerCase().includes('effective vs'));
-        
+        const mentionsTarget = suggestion.reasons.some(
+          (reason) =>
+            reason.toLowerCase().includes(targetEnemyName) ||
+            reason.toLowerCase().includes("effective vs")
+        );
+
         return isGoodCounter || hasCounterReason || mentionsTarget;
       })
       .sort((a, b) => b.breakdown.counter - a.breakdown.counter)
@@ -157,17 +160,19 @@ export class DraftAnalyzerIntegration {
     // Filter and sort by synergy scores
     return suggestions
       .filter((suggestion) => {
-        const hasSynergy = suggestion.breakdown.synergy > 0.6 || 
+        const hasSynergy =
+          suggestion.breakdown.synergy > 0.6 ||
           suggestion.breakdown.mlSynergy > 0.6 ||
           suggestion.breakdown.itemSynergy > 0.6;
-        
+
         // If focusHero is provided, prioritize heroes that synergize with it
         if (focusHero) {
-          const focusedSynergy = suggestion.reasons.some(reason =>
-            reason.toLowerCase().includes('synerg'));
+          const focusedSynergy = suggestion.reasons.some((reason) =>
+            reason.toLowerCase().includes("synerg")
+          );
           return hasSynergy || focusedSynergy;
         }
-        
+
         return hasSynergy;
       })
       .sort((a, b) => {
@@ -316,14 +321,16 @@ export const formatScoreBreakdown = (breakdown: {
   };
 };
 
-export const formatTimingWindows = (windows: {
-  phase: string;
-  start: number;
-  end: number;
-  powerLevel: number;
-  keyItems: string[];
-  objectives: string[];
-}[]) => {
+export const formatTimingWindows = (
+  windows: {
+    phase: string;
+    start: number;
+    end: number;
+    powerLevel: number;
+    keyItems: string[];
+    objectives: string[];
+  }[]
+) => {
   return windows.map((window) => ({
     phase: window.phase.charAt(0).toUpperCase() + window.phase.slice(1),
     timing: `${window.start}-${window.end} min`,
@@ -333,12 +340,14 @@ export const formatTimingWindows = (windows: {
   }));
 };
 
-export const formatLaneAssignments = (assignments: {
-  position: 1 | 2 | 3 | 4 | 5;
-  hero: { localized_name: string };
-  confidence: number;
-  reasoning: string[];
-}[]) => {
+export const formatLaneAssignments = (
+  assignments: {
+    position: 1 | 2 | 3 | 4 | 5;
+    hero: { localized_name: string };
+    confidence: number;
+    reasoning: string[];
+  }[]
+) => {
   const positionNames = {
     1: "Carry",
     2: "Mid",

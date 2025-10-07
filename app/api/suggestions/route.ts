@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       draftState,
       roleFilter,
       gameContext,
-      useAdvanced = true
+      useAdvanced = true,
     }: {
       draftState: DraftState;
       roleFilter?: Role[];
@@ -81,27 +81,23 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate suggestions - use advanced method if requested
-    const suggestions = useAdvanced 
+    const suggestions = useAdvanced
       ? await analyzer.generateAdvancedSuggestions(
           draftState,
           gameContext || {},
           roleFilter,
           15
         )
-      : analyzer.generateSuggestions(
-          draftState,
-          roleFilter,
-          15
-        );
+      : analyzer.generateSuggestions(draftState, roleFilter, 15);
 
     // Debug logging
     console.log(`Generated ${suggestions.length} suggestions for draft:`, {
-      yourTeamCount: draftState.yourTeam.filter(h => h !== null).length,
-      enemyTeamCount: draftState.enemyTeam.filter(h => h !== null).length,
+      yourTeamCount: draftState.yourTeam.filter((h) => h !== null).length,
+      enemyTeamCount: draftState.enemyTeam.filter((h) => h !== null).length,
       useAdvanced,
       roleFilter,
       totalHeroes: heroes.length,
-      totalStats: heroStats.length
+      totalStats: heroStats.length,
     });
 
     // Cache for 5 minutes since this is dynamic data
