@@ -10,9 +10,18 @@ export async function POST(request: NextRequest) {
     const {
       draftState,
       roleFilter,
+      gameContext,
+      useAdvanced = true
     }: {
       draftState: DraftState;
       roleFilter?: Role[];
+      gameContext?: {
+        expectedDuration?: number;
+        preferredLanes?: number[];
+        playstyle?: "aggressive" | "defensive" | "balanced";
+        itemStrategy?: "early" | "scaling" | "utility";
+      };
+      useAdvanced?: boolean;
     } = body;
 
     // Validate request body
@@ -37,13 +46,27 @@ export async function POST(request: NextRequest) {
       (h) => h !== null
     ) as Hero[];
 
-    // Fetch matchup data for enemy heroes (this could be cached/optimized)
+    // Fetch matchup data for enemy heroes with enhanced error handling
     const matchupPromises = enemyHeroes.map(async (enemy) => {
       try {
         const matchups = await OpenDotaAPI.getHeroMatchups(enemy.id);
         return { heroId: enemy.id, matchups };
       } catch (error) {
-        console.warn(`Failed to fetch matchups for hero ${enemy.id}:`, error);
+        // Enhanced error logging with more context
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        console.warn(
+          `⚠️ Failed to fetch matchups for hero ${enemy.id} (${
+            enemy.localized_name || "Unknown"
+          }):`,
+          {
+            message: errorMessage,
+            heroName: enemy.localized_name || "Unknown",
+            endpoint: `/heroes/${enemy.id}/matchups`,
+          }
+        );
+
+        // Return empty matchups but keep the request going
         return { heroId: enemy.id, matchups: [] };
       }
     });
@@ -57,12 +80,29 @@ export async function POST(request: NextRequest) {
       analyzer.setMatchupData(heroId, transformedMatchups);
     });
 
-    // Generate suggestions
-    const suggestions = analyzer.generateSuggestions(
-      draftState,
+    // Generate suggestions - use advanced method if requested
+    const suggestions = useAdvanced 
+      ? await analyzer.generateAdvancedSuggestions(
+          draftState,
+          gameContext || {},
+          roleFilter,
+          15
+        )
+      : analyzer.generateSuggestions(
+          draftState,
+          roleFilter,
+          15
+        );
+
+    // Debug logging
+    console.log(`Generated ${suggestions.length} suggestions for draft:`, {
+      yourTeamCount: draftState.yourTeam.filter(h => h !== null).length,
+      enemyTeamCount: draftState.enemyTeam.filter(h => h !== null).length,
+      useAdvanced,
       roleFilter,
-      15
-    );
+      totalHeroes: heroes.length,
+      totalStats: heroStats.length
+    });
 
     // Cache for 5 minutes since this is dynamic data
     return NextResponse.json(suggestions, {

@@ -23,12 +23,24 @@ const fetchHeroStats = async (): Promise<HeroStats[]> => {
 
 const fetchSuggestions = async (
   draftState: DraftState,
-  roleFilter?: Role[]
+  roleFilter?: Role[],
+  gameContext?: {
+    expectedDuration?: number;
+    preferredLanes?: number[];
+    playstyle?: "aggressive" | "defensive" | "balanced";
+    itemStrategy?: "early" | "scaling" | "utility";
+  },
+  useAdvanced: boolean = true
 ): Promise<DraftSuggestion[]> => {
   const response = await fetch("/api/suggestions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ draftState, roleFilter }),
+    body: JSON.stringify({
+      draftState,
+      roleFilter,
+      gameContext,
+      useAdvanced,
+    }),
   });
   if (!response.ok) throw new Error("Failed to fetch suggestions");
   return response.json();
@@ -46,6 +58,16 @@ export const useDraft = () => {
   });
 
   const [roleFilter, setRoleFilter] = useState<Role[]>([]);
+
+  // Game context for advanced analysis
+  const [gameContext, setGameContext] = useState<{
+    expectedDuration?: number;
+    preferredLanes?: number[];
+    playstyle?: "aggressive" | "defensive" | "balanced";
+    itemStrategy?: "early" | "scaling" | "utility";
+  }>({});
+
+  const [useAdvancedAnalysis, setUseAdvancedAnalysis] = useState(true);
 
   // Loading notification state
   const [loadingNotification, setLoadingNotification] = useState<{
@@ -80,10 +102,19 @@ export const useDraft = () => {
     mutationFn: ({
       draftState,
       roleFilter,
+      gameContext,
+      useAdvanced,
     }: {
       draftState: DraftState;
       roleFilter?: Role[];
-    }) => fetchSuggestions(draftState, roleFilter),
+      gameContext?: {
+        expectedDuration?: number;
+        preferredLanes?: number[];
+        playstyle?: "aggressive" | "defensive" | "balanced";
+        itemStrategy?: "early" | "scaling" | "utility";
+      };
+      useAdvanced?: boolean;
+    }) => fetchSuggestions(draftState, roleFilter, gameContext, useAdvanced),
     onMutate: () => {
       // Show loading notification
       setLoadingNotification({
@@ -178,8 +209,19 @@ export const useDraft = () => {
   }, [queryClient]);
 
   const getSuggestions = useCallback(() => {
-    suggestionsMutation.mutate({ draftState, roleFilter });
-  }, [suggestionsMutation, draftState, roleFilter]);
+    suggestionsMutation.mutate({
+      draftState,
+      roleFilter,
+      gameContext,
+      useAdvanced: useAdvancedAnalysis,
+    });
+  }, [
+    suggestionsMutation,
+    draftState,
+    roleFilter,
+    gameContext,
+    useAdvancedAnalysis,
+  ]);
 
   // Helper functions
   const getAvailableHeroes = useCallback((): Hero[] => {
@@ -229,6 +271,8 @@ export const useDraft = () => {
     draftState,
     roleFilter,
     loadingNotification,
+    gameContext,
+    useAdvancedAnalysis,
 
     // Data
     heroes,
@@ -251,6 +295,8 @@ export const useDraft = () => {
     resetDraft,
     getSuggestions,
     setRoleFilter,
+    setGameContext,
+    setUseAdvancedAnalysis,
 
     // Helpers
     getAvailableHeroes,

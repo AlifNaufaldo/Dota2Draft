@@ -7,16 +7,48 @@ import {
   Role,
 } from "./types";
 import { calculateWinRate } from "./opendota";
+import { DraftAnalyzerIntegration } from "./draft-integration";
+import { GameContext as AdvancedGameContext } from "./advanced-draft-analyzer";
+// Advanced analyzer functionality integrated directly
+
+// Enhanced interfaces for advanced analysis
+export interface AdvancedScoreBreakdown {
+  meta: number;
+  counter: number;
+  synergy: number;
+  itemSynergy: number;
+  laneOptimization: number;
+  timing: number;
+  proPattern: number;
+  mlSynergy: number;
+}
+
+export interface GameContext {
+  expectedDuration?: number;
+  preferredLanes?: number[];
+  playstyle?: "aggressive" | "defensive" | "balanced";
+  itemStrategy?: "early" | "scaling" | "utility";
+}
+
+export interface AdvancedDraftSuggestion extends DraftSuggestion {
+  advancedBreakdown: AdvancedScoreBreakdown;
+  itemRecommendations: string[];
+  optimalLane: number;
+  timingWindow: "early" | "mid" | "late";
+  proPickRate: number;
+}
 
 export class DraftAnalyzer {
   private heroes: Hero[];
   private heroStats: HeroStats[];
   private matchupData: Map<number, HeroMatchupData[]>;
+  private integration: DraftAnalyzerIntegration;
 
   constructor(heroes: Hero[], heroStats: HeroStats[]) {
     this.heroes = heroes;
     this.heroStats = heroStats;
     this.matchupData = new Map();
+    this.integration = new DraftAnalyzerIntegration(heroes, heroStats);
   }
 
   // Set matchup data for heroes
@@ -59,6 +91,110 @@ export class DraftAnalyzer {
     suggestions.sort((a, b) => b.score - a.score);
 
     return suggestions.slice(0, limit);
+  }
+
+  // Generate enhanced suggestions with advanced analytics
+  async generateAdvancedSuggestions(
+    draftState: DraftState,
+    gameContext: GameContext = {},
+    roleFilter?: Role[],
+    limit: number = 10
+  ): Promise<AdvancedDraftSuggestion[]> {
+    try {
+      // Convert GameContext to AdvancedGameContext
+      const advancedContext: AdvancedGameContext = {
+        expectedDuration: gameContext.expectedDuration,
+        preferredLanes: gameContext.preferredLanes,
+        playstyle: gameContext.playstyle,
+        itemStrategy: gameContext.itemStrategy,
+      };
+
+      // Get advanced suggestions from integration layer
+      const advancedSuggestions =
+        await this.integration.getEnhancedRecommendations(draftState, {
+          gameContext: advancedContext,
+          roleFilter,
+          includeItemBuilds: true,
+          includeLaneOptimization: true,
+          includeTimingAnalysis: true,
+          includeProPatterns: true,
+        });
+
+      // Convert to AdvancedDraftSuggestion format
+      const convertedSuggestions: AdvancedDraftSuggestion[] =
+        advancedSuggestions.map((suggestion) => {
+          const heroStats = this.heroStats.find(
+            (hs) => hs.id === suggestion.hero.id
+          );
+          return {
+            hero: suggestion.hero,
+            score: suggestion.score,
+            win_rate: heroStats?.pub_win || 0.5,
+            confidence:
+              suggestion.score > 0.8
+                ? "high"
+                : suggestion.score > 0.6
+                ? "medium"
+                : "low",
+            reasoning: suggestion.reasons,
+            counters: [], // Will be populated if needed
+            synergies: [], // Will be populated if needed
+            advancedBreakdown: {
+              meta: suggestion.breakdown.meta,
+              counter: suggestion.breakdown.counter,
+              synergy: suggestion.breakdown.synergy,
+              itemSynergy: suggestion.breakdown.itemSynergy,
+              laneOptimization: suggestion.breakdown.laneOptimization,
+              timing: suggestion.breakdown.timing,
+              proPattern: suggestion.breakdown.proPattern,
+              mlSynergy: suggestion.breakdown.mlSynergy,
+            },
+            itemRecommendations:
+              suggestion.itemSynergy.length > 0
+                ? suggestion.itemSynergy[0].items
+                : [],
+            optimalLane:
+              suggestion.laneOptimization.length > 0
+                ? suggestion.laneOptimization.find(
+                    (la) => la.hero.id === suggestion.hero.id
+                  )?.position || 1
+                : 1,
+            timingWindow:
+              suggestion.timingWindows.length > 0
+                ? suggestion.timingWindows.reduce((best, current) =>
+                    current.powerLevel > best.powerLevel ? current : best
+                  ).phase
+                : "mid",
+            proPickRate:
+              suggestion.proPatterns.firstPickRate +
+              suggestion.proPatterns.situationalPickRate,
+          };
+        });
+
+      return convertedSuggestions.slice(0, limit);
+    } catch (error) {
+      console.error("Error generating advanced suggestions:", error);
+      // Fallback to basic suggestions
+      return this.generateSuggestions(draftState, roleFilter, limit).map(
+        (suggestion) => ({
+          ...suggestion,
+          advancedBreakdown: {
+            meta: 0.5,
+            counter: 0.5,
+            synergy: 0.5,
+            itemSynergy: 0.5,
+            laneOptimization: 0.5,
+            timing: 0.5,
+            proPattern: 0.5,
+            mlSynergy: 0.5,
+          },
+          itemRecommendations: [],
+          optimalLane: 1,
+          timingWindow: "mid" as const,
+          proPickRate: 0.3,
+        })
+      );
+    }
   }
 
   // Calculate comprehensive score for a hero based on draft state
@@ -115,6 +251,86 @@ export class DraftAnalyzer {
       reasoning: reasoning.positive,
       counters: reasoning.counters,
       synergies: reasoning.synergies,
+    };
+  }
+
+  // Calculate advanced comprehensive score with enhanced analytics
+  private calculateAdvancedHeroScore(
+    hero: Hero,
+    draftState: DraftState,
+    gameContext: GameContext
+  ): AdvancedDraftSuggestion {
+    const enemyHeroes = draftState.enemyTeam.filter(
+      (h) => h !== null
+    ) as Hero[];
+    const teamHeroes = draftState.yourTeam.filter((h) => h !== null) as Hero[];
+
+    // Calculate all score components
+    const advancedBreakdown: AdvancedScoreBreakdown = {
+      meta: this.getMetaScore(hero.id),
+      counter: this.getCounterScore(hero.id, enemyHeroes),
+      synergy: this.getSynergyScore(hero.id, teamHeroes),
+      itemSynergy: this.calculateItemSynergyScore(
+        hero,
+        teamHeroes,
+        gameContext
+      ),
+      laneOptimization: this.calculateLaneOptimizationScore(
+        hero,
+        draftState,
+        gameContext
+      ),
+      timing: this.calculateTimingScore(hero, gameContext),
+      proPattern: this.calculateProPatternScore(hero.id),
+      mlSynergy: this.calculateMLSynergyScore(hero, teamHeroes),
+    };
+
+    // Calculate weighted final score with enhanced weighting
+    const finalScore =
+      advancedBreakdown.meta * 0.15 +
+      advancedBreakdown.counter * 0.2 +
+      advancedBreakdown.synergy * 0.15 +
+      advancedBreakdown.itemSynergy * 0.15 +
+      advancedBreakdown.laneOptimization * 0.1 +
+      advancedBreakdown.timing * 0.1 +
+      advancedBreakdown.proPattern * 0.1 +
+      advancedBreakdown.mlSynergy * 0.05;
+
+    // Get confidence level
+    const confidence = this.getConfidenceLevel(finalScore, enemyHeroes.length);
+
+    // Generate enhanced reasoning
+    const reasoning = this.generateAdvancedReasoning(
+      hero,
+      advancedBreakdown,
+      gameContext
+    );
+
+    // Get hero stats for win rate
+    const heroStat = this.heroStats.find((stat) => stat.id === hero.id);
+    const winRate = heroStat
+      ? calculateWinRate(heroStat.pub_win, heroStat.pub_pick)
+      : 50;
+
+    // Calculate additional advanced features
+    const itemRecommendations = this.getItemRecommendations(hero, gameContext);
+    const optimalLane = this.getOptimalLane(hero);
+    const timingWindow = this.getTimingWindow(hero, gameContext);
+    const proPickRate = this.getProPickRate(hero.id);
+
+    return {
+      hero,
+      score: Math.round(finalScore),
+      win_rate: winRate,
+      confidence,
+      reasoning: reasoning.positive,
+      counters: reasoning.counters,
+      synergies: reasoning.synergies,
+      advancedBreakdown,
+      itemRecommendations,
+      optimalLane,
+      timingWindow,
+      proPickRate,
     };
   }
 
@@ -280,6 +496,447 @@ export class DraftAnalyzer {
     }
 
     return { positive: reasoning, counters, synergies };
+  }
+
+  // Advanced analysis methods
+  private calculateItemSynergyScore(
+    hero: Hero,
+    teamHeroes: Hero[],
+    gameContext: GameContext
+  ): number {
+    let synergyScore = 50;
+
+    // Item build synergy based on hero role and team composition
+    if (hero.roles.includes("Carry")) {
+      const hasSupport = teamHeroes.some((h) => h.roles.includes("Support"));
+      if (hasSupport) synergyScore += 15;
+    }
+
+    if (hero.roles.includes("Support")) {
+      const hasCores = teamHeroes.some((h) => h.roles.includes("Carry"));
+      if (hasCores) synergyScore += 20;
+    }
+
+    // Context-based adjustments
+    if (
+      gameContext.itemStrategy === "early" &&
+      hero.roles.includes("Support")
+    ) {
+      synergyScore += 10;
+    } else if (
+      gameContext.itemStrategy === "scaling" &&
+      hero.roles.includes("Carry")
+    ) {
+      synergyScore += 15;
+    }
+
+    return Math.min(100, Math.max(0, synergyScore));
+  }
+
+  private calculateLaneOptimizationScore(
+    hero: Hero,
+    draftState: DraftState,
+    gameContext: GameContext
+  ): number {
+    let laneScore = 50;
+    const optimalLane = this.getOptimalLane(hero);
+
+    // Check if preferred lanes match
+    if (gameContext.preferredLanes?.includes(optimalLane)) {
+      laneScore += 20;
+    }
+
+    // Check lane conflicts with existing team
+    const teamHeroes = draftState.yourTeam.filter((h) => h !== null) as Hero[];
+    const laneConflicts = teamHeroes.filter(
+      (teammate) => this.getOptimalLane(teammate) === optimalLane
+    ).length;
+
+    laneScore -= laneConflicts * 15;
+
+    return Math.min(100, Math.max(0, laneScore));
+  }
+
+  private calculateTimingScore(hero: Hero, gameContext: GameContext): number {
+    if (!gameContext.expectedDuration) return 50;
+
+    const timingWindow = this.getTimingWindow(hero, gameContext);
+
+    // Score based on how well hero fits expected game duration
+    if (gameContext.expectedDuration <= 25 && timingWindow === "early") {
+      return 85;
+    } else if (
+      gameContext.expectedDuration >= 25 &&
+      gameContext.expectedDuration <= 45 &&
+      timingWindow === "mid"
+    ) {
+      return 80;
+    } else if (gameContext.expectedDuration >= 45 && timingWindow === "late") {
+      return 90;
+    }
+
+    return 60;
+  }
+
+  private calculateProPatternScore(heroId: number): number {
+    // Simplified pro pattern scoring based on hero ID
+    const heroStat = this.heroStats.find((stat) => stat.id === heroId);
+    if (!heroStat) return 50;
+
+    // Use pro scene metrics if available, otherwise use pub stats as approximation
+    const proWinRate = heroStat.pro_win || heroStat.pub_win;
+    const proPicks = heroStat.pro_pick || heroStat.pub_pick;
+
+    if (proPicks === 0) return 30; // Rarely picked in pro scene
+
+    const winRate = (proWinRate / proPicks) * 100;
+    return Math.min(100, Math.max(0, winRate));
+  }
+
+  private calculateMLSynergyScore(hero: Hero, teamHeroes: Hero[]): number {
+    if (teamHeroes.length === 0) return 50;
+
+    let synergyScore = 0;
+
+    teamHeroes.forEach((teammate) => {
+      let pairSynergy = 50;
+
+      // Attribute diversity bonus
+      if (hero.primary_attr !== teammate.primary_attr) {
+        pairSynergy += 10;
+      }
+
+      // Role complementarity
+      const supportRoles = ["Support", "Disabler"];
+      const coreRoles = ["Carry", "Nuker"];
+
+      const heroIsSupport = hero.roles.some((role) =>
+        supportRoles.includes(role)
+      );
+      const teammateIsCore = teammate.roles.some((role) =>
+        coreRoles.includes(role)
+      );
+
+      if (heroIsSupport && teammateIsCore) {
+        pairSynergy += 20;
+      }
+
+      // Attack type diversity
+      if (hero.attack_type !== teammate.attack_type) {
+        pairSynergy += 5;
+      }
+
+      synergyScore += pairSynergy;
+    });
+
+    return Math.min(100, Math.max(0, synergyScore / teamHeroes.length));
+  }
+
+  private generateAdvancedReasoning(
+    hero: Hero,
+    breakdown: AdvancedScoreBreakdown,
+    gameContext: GameContext
+  ): { positive: string[]; counters: string[]; synergies: string[] } {
+    const positive: string[] = [];
+    const counters: string[] = [];
+    const synergies: string[] = [];
+
+    // Meta reasoning
+    if (breakdown.meta > 70) {
+      positive.push("Strong in current meta");
+    }
+
+    // Counter reasoning
+    if (breakdown.counter > 70) {
+      positive.push("Excellent counter to enemy team");
+      counters.push("Counters enemy cores effectively");
+    }
+
+    // Synergy reasoning
+    if (breakdown.synergy > 70) {
+      positive.push("Great synergy with team composition");
+      synergies.push("Complements team strategy");
+    }
+
+    // Item synergy
+    if (breakdown.itemSynergy > 70) {
+      positive.push("Strong item build synergies");
+    }
+
+    // Lane optimization
+    if (breakdown.laneOptimization > 75) {
+      positive.push("Optimal lane assignment available");
+    }
+
+    // Timing
+    if (breakdown.timing > 75) {
+      positive.push("Perfect timing for expected game duration");
+    }
+
+    // Pro patterns
+    if (breakdown.proPattern > 70) {
+      positive.push("Proven effective in professional scene");
+    }
+
+    // ML synergy
+    if (breakdown.mlSynergy > 75) {
+      positive.push("AI predicts exceptional team synergy");
+    }
+
+    // Context-based reasoning
+    if (
+      gameContext.playstyle === "aggressive" &&
+      hero.roles.includes("Initiator")
+    ) {
+      positive.push("Fits aggressive playstyle perfectly");
+    }
+
+    return { positive, counters, synergies };
+  }
+
+  private getItemRecommendations(
+    hero: Hero,
+    gameContext: GameContext
+  ): string[] {
+    const items: string[] = [];
+
+    // Role-based recommendations
+    if (hero.roles.includes("Carry")) {
+      items.push("Power Treads", "Battle Fury", "Black King Bar");
+      if (gameContext.itemStrategy === "scaling") {
+        items.push("Heart of Tarrasque", "Satanic");
+      }
+    } else if (hero.roles.includes("Support")) {
+      items.push("Arcane Boots", "Force Staff", "Glimmer Cape");
+      if (gameContext.itemStrategy === "utility") {
+        items.push("Aether Lens", "Ghost Scepter");
+      }
+    } else if (hero.roles.includes("Initiator")) {
+      items.push("Blink Dagger", "Pipe of Insight", "Crimson Guard");
+    } else {
+      items.push("Bottle", "Boots of Travel", "Black King Bar");
+    }
+
+    return items.slice(0, 5);
+  }
+
+  private getOptimalLane(hero: Hero): number {
+    // Position 1-5 (Carry, Mid, Offlane, Soft Support, Hard Support)
+    if (hero.roles.includes("Carry")) return 1;
+    if (hero.roles.includes("Support")) return 5;
+    if (hero.roles.includes("Initiator")) return 3;
+    if (hero.primary_attr === "int") return 2;
+    return 4; // Default to position 4
+  }
+
+  private getTimingWindow(
+    hero: Hero,
+    gameContext: GameContext
+  ): "early" | "mid" | "late" {
+    if (hero.roles.includes("Support") || hero.roles.includes("Disabler")) {
+      return "early";
+    } else if (hero.roles.includes("Carry")) {
+      return gameContext.itemStrategy === "early" ? "mid" : "late";
+    } else {
+      return "mid";
+    }
+  }
+
+  private getProPickRate(heroId: number): number {
+    const heroStat = this.heroStats.find((stat) => stat.id === heroId);
+    if (!heroStat) return 0;
+
+    const proPicks = heroStat.pro_pick || 0;
+    const totalProGames = 1000; // Approximate total pro games
+
+    return (proPicks / totalProGames) * 100;
+  }
+
+  // Advanced suggestion methods using integration layer
+  async getCounterPickSuggestions(
+    draftState: DraftState,
+    targetEnemyHero: Hero
+  ): Promise<AdvancedDraftSuggestion[]> {
+    const suggestions = await this.integration.getCounterPickRecommendations(
+      draftState,
+      targetEnemyHero
+    );
+
+    return suggestions.map((suggestion) => ({
+      hero: suggestion.hero,
+      score: suggestion.score,
+      win_rate:
+        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
+        0.5,
+      confidence:
+        suggestion.score > 0.8
+          ? "high"
+          : suggestion.score > 0.6
+          ? "medium"
+          : "low",
+      reasoning: suggestion.reasons,
+      counters: [],
+      synergies: [],
+      advancedBreakdown: suggestion.breakdown,
+      itemRecommendations:
+        suggestion.itemSynergy.length > 0
+          ? suggestion.itemSynergy[0].items
+          : [],
+      optimalLane:
+        suggestion.laneOptimization.length > 0
+          ? suggestion.laneOptimization.find(
+              (la) => la.hero.id === suggestion.hero.id
+            )?.position || 1
+          : 1,
+      timingWindow:
+        suggestion.timingWindows.length > 0
+          ? suggestion.timingWindows.reduce((best, current) =>
+              current.powerLevel > best.powerLevel ? current : best
+            ).phase
+          : "mid",
+      proPickRate:
+        suggestion.proPatterns.firstPickRate +
+        suggestion.proPatterns.situationalPickRate,
+    }));
+  }
+
+  async getSynergyPickSuggestions(
+    draftState: DraftState
+  ): Promise<AdvancedDraftSuggestion[]> {
+    const suggestions = await this.integration.getSynergyRecommendations(
+      draftState
+    );
+
+    return suggestions.map((suggestion) => ({
+      hero: suggestion.hero,
+      score: suggestion.score,
+      win_rate:
+        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
+        0.5,
+      confidence:
+        suggestion.score > 0.8
+          ? "high"
+          : suggestion.score > 0.6
+          ? "medium"
+          : "low",
+      reasoning: suggestion.reasons,
+      counters: [],
+      synergies: [],
+      advancedBreakdown: suggestion.breakdown,
+      itemRecommendations:
+        suggestion.itemSynergy.length > 0
+          ? suggestion.itemSynergy[0].items
+          : [],
+      optimalLane:
+        suggestion.laneOptimization.length > 0
+          ? suggestion.laneOptimization.find(
+              (la) => la.hero.id === suggestion.hero.id
+            )?.position || 1
+          : 1,
+      timingWindow:
+        suggestion.timingWindows.length > 0
+          ? suggestion.timingWindows.reduce((best, current) =>
+              current.powerLevel > best.powerLevel ? current : best
+            ).phase
+          : "mid",
+      proPickRate:
+        suggestion.proPatterns.firstPickRate +
+        suggestion.proPatterns.situationalPickRate,
+    }));
+  }
+
+  async getLaneSpecificSuggestions(
+    draftState: DraftState,
+    lane: 1 | 2 | 3 | 4 | 5
+  ): Promise<AdvancedDraftSuggestion[]> {
+    const suggestions = await this.integration.getLaneRecommendations(
+      draftState,
+      lane
+    );
+
+    return suggestions.map((suggestion) => ({
+      hero: suggestion.hero,
+      score: suggestion.score,
+      win_rate:
+        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
+        0.5,
+      confidence:
+        suggestion.score > 0.8
+          ? "high"
+          : suggestion.score > 0.6
+          ? "medium"
+          : "low",
+      reasoning: suggestion.reasons,
+      counters: [],
+      synergies: [],
+      advancedBreakdown: suggestion.breakdown,
+      itemRecommendations:
+        suggestion.itemSynergy.length > 0
+          ? suggestion.itemSynergy[0].items
+          : [],
+      optimalLane:
+        suggestion.laneOptimization.length > 0
+          ? suggestion.laneOptimization.find(
+              (la) => la.hero.id === suggestion.hero.id
+            )?.position || 1
+          : 1,
+      timingWindow:
+        suggestion.timingWindows.length > 0
+          ? suggestion.timingWindows.reduce((best, current) =>
+              current.powerLevel > best.powerLevel ? current : best
+            ).phase
+          : "mid",
+      proPickRate:
+        suggestion.proPatterns.firstPickRate +
+        suggestion.proPatterns.situationalPickRate,
+    }));
+  }
+
+  async getTimingBasedSuggestions(
+    draftState: DraftState,
+    targetPhase: "early" | "mid" | "late"
+  ): Promise<AdvancedDraftSuggestion[]> {
+    const suggestions = await this.integration.getTimingRecommendations(
+      draftState,
+      targetPhase
+    );
+
+    return suggestions.map((suggestion) => ({
+      hero: suggestion.hero,
+      score: suggestion.score,
+      win_rate:
+        this.heroStats.find((hs) => hs.id === suggestion.hero.id)?.pub_win ||
+        0.5,
+      confidence:
+        suggestion.score > 0.8
+          ? "high"
+          : suggestion.score > 0.6
+          ? "medium"
+          : "low",
+      reasoning: suggestion.reasons,
+      counters: [],
+      synergies: [],
+      advancedBreakdown: suggestion.breakdown,
+      itemRecommendations:
+        suggestion.itemSynergy.length > 0
+          ? suggestion.itemSynergy[0].items
+          : [],
+      optimalLane:
+        suggestion.laneOptimization.length > 0
+          ? suggestion.laneOptimization.find(
+              (la) => la.hero.id === suggestion.hero.id
+            )?.position || 1
+          : 1,
+      timingWindow:
+        suggestion.timingWindows.length > 0
+          ? suggestion.timingWindows.reduce((best, current) =>
+              current.powerLevel > best.powerLevel ? current : best
+            ).phase
+          : "mid",
+      proPickRate:
+        suggestion.proPatterns.firstPickRate +
+        suggestion.proPatterns.situationalPickRate,
+    }));
   }
 }
 

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TeamDraft } from "./TeamDraft";
 import { SuggestionPanel } from "./SuggestionPanel";
 import { HeroGrid } from "./HeroGrid";
+import { GameContextPanel } from "./GameContextPanel";
 import { LoadingToast } from "@/components/ui/LoadingToast";
 import { useDraft } from "@/hooks/useDraft";
 import { Hero } from "@/lib/types";
@@ -24,12 +25,16 @@ export function DraftBoard() {
     suggestionsLoading,
     suggestionsError,
     loadingNotification,
+    gameContext,
+    useAdvancedAnalysis,
     addHeroToTeam,
     removeHeroFromTeam,
     resetDraft,
     getSuggestions,
     roleFilter,
     setRoleFilter,
+    setGameContext,
+    setUseAdvancedAnalysis,
     isHeroPicked,
     getDraftProgress,
   } = useDraft();
@@ -325,6 +330,15 @@ export function DraftBoard() {
 
             {/* Side Panel - Always show suggestions if available */}
             <div className="space-y-4">
+              {/* Game Context Panel */}
+              <GameContextPanel
+                gameContext={gameContext}
+                setGameContext={setGameContext}
+                useAdvancedAnalysis={useAdvancedAnalysis}
+                setUseAdvancedAnalysis={setUseAdvancedAnalysis}
+                onAnalyze={getSuggestions}
+                isAnalyzing={suggestionsLoading}
+              />
               {suggestions.length > 0 && pickingMode !== "suggestions" && (
                 <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/80 border-slate-700/60 shadow-xl backdrop-blur-sm">
                   <CardHeader className="pb-3 border-b border-slate-700/50">

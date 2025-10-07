@@ -9,20 +9,44 @@ import {
 
 const OPENDOTA_API_BASE = "https://api.opendota.com/api";
 
-// Create axios instance with rate limiting considerations
+// Create axios instance with increased timeout and retry logic
 const openDotaClient = axios.create({
   baseURL: OPENDOTA_API_BASE,
-  timeout: 10000,
+  timeout: 30000, // Increased to 30 seconds
   headers: {
     Accept: "application/json",
   },
 });
 
-// Add request interceptor for rate limiting
-openDotaClient.interceptors.request.use((config) => {
-  // OpenDota allows 60 requests per minute for free tier
-  return config;
-});
+// Add retry interceptor
+openDotaClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+
+    // Retry logic for timeout and network errors
+    if (
+      !config._retry &&
+      (error.code === "ECONNABORTED" ||
+        error.code === "ETIMEDOUT" ||
+        (error.response && error.response.status >= 500))
+    ) {
+      config._retry = true;
+      console.log(
+        `🔄 Retrying request to ${config.url} due to ${
+          error.code || error.response?.status
+        }`
+      );
+
+      // Wait 2 seconds before retry
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      return openDotaClient(config);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export class OpenDotaAPI {
   // Get all heroes
@@ -57,7 +81,7 @@ export class OpenDotaAPI {
       const response = await openDotaClient.get("/publicMatches", {
         params: {
           min_time: sevenDaysAgo,
-          less_than_match_id: null, // Start from most recent
+          less_than_match_id: null,
         },
       });
 
@@ -86,14 +110,31 @@ export class OpenDotaAPI {
     }
   }
 
-  // Get hero matchup data
+  // Get hero matchup data - FIXED WITH BETTER ERROR HANDLING
   static async getHeroMatchups(heroId: number): Promise<OpenDotaMatchupData[]> {
     try {
+      console.log(`🔍 Fetching matchups for hero ${heroId}...`);
       const response = await openDotaClient.get(`/heroes/${heroId}/matchups`);
+      console.log(`✅ Successfully fetched matchups for hero ${heroId}`);
       return response.data;
-    } catch (error) {
-      console.error(`Error fetching matchups for hero ${heroId}:`, error);
-      throw new Error("Failed to fetch hero matchup data");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      const errorCode = (error as { code?: string })?.code || "UNKNOWN";
+      const errorStatus =
+        (error as { response?: { status?: number } })?.response?.status ||
+        "NO_STATUS";
+
+      console.error(`❌ Error fetching matchups for hero ${heroId}:`, {
+        message: errorMessage,
+        code: errorCode,
+        status: errorStatus,
+        url: `/heroes/${heroId}/matchups`,
+      });
+
+      throw new Error(
+        `Failed to fetch hero matchup data for hero ${heroId}: ${errorMessage}`
+      );
     }
   }
 
@@ -103,7 +144,7 @@ export class OpenDotaAPI {
       const response = await openDotaClient.get(`/heroes/${heroId}`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching details for hero ${heroId}:`, error);
+      console.error(`Error fetching hero details for ${heroId}:`, error);
       throw new Error("Failed to fetch hero details");
     }
   }
