@@ -274,9 +274,13 @@ function SuggestionGalleryCard({
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-emerald-400" />
-              <span className="text-emerald-300 font-semibold text-sm">{score.toFixed(2)}</span>
+              <span className="text-emerald-300 font-semibold text-sm">
+                {score.toFixed(2)}
+              </span>
             </div>
-            <span className="text-slate-300">{Number(win_rate).toFixed(2)}% WR</span>
+            <span className="text-slate-300">
+              {Number(win_rate).toFixed(2)}% WR
+            </span>
           </div>
 
           {/* Simple Role Badge */}

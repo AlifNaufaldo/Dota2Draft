@@ -129,7 +129,7 @@ export class DraftAnalyzer {
           return {
             hero: suggestion.hero,
             score: suggestion.score,
-            win_rate: heroStats 
+            win_rate: heroStats
               ? calculateWinRate(heroStats.pub_win, heroStats.pub_pick)
               : 50,
             confidence:
